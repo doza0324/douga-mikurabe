@@ -344,7 +344,7 @@ for(const c of clips){
   $('fwd-'+c.id).addEventListener('click',()=>step(1));
   $('toggle-'+c.id).addEventListener('click',()=>{
     if(!c.v.paused){c.v.pause();return}
-    c.v.playbackRate=.25;
+    c.v.playbackRate=1; // 編集画面の再生は等速。細かい位置はコマ送りで合わせる
     if(c.v.currentTime>=c.dur-.02)c.v.currentTime=0;
     c.v.play().catch(()=>{});
   });
