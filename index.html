@@ -27,6 +27,9 @@
   --bg:#0e1612; --surface:#16211b; --sunken:#1e2c25; --ink:#e8f0ea; --muted:#9fb2a7; --line:#2d3c34;
   --accent:#57c596; --on-accent:#08261a; --a:#4a97d6; --b:#d4762a; --stage:#050907; color-scheme:dark}
 [hidden]{display:none!important}
+.manual-top{display:flex;justify-content:flex-end;padding-top:14px}
+.manual-link{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border:1px solid var(--accent);border-radius:999px;color:var(--accent);background:var(--surface);font-weight:700;font-size:.875rem;text-decoration:none}
+.manual-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7;
@@ -120,7 +123,9 @@ select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(-
 body.cmp{overflow:hidden}
 body.cmp header,body.cmp .bar,body.cmp #sample-note,body.cmp .resume,body.cmp .proj-note{display:none}
 body.cmp main{position:fixed;inset:0;z-index:20;max-width:none;gap:0;background:var(--stage)}
-body.cmp .stage{flex:1;min-height:0;gap:2px;grid-template-rows:minmax(0,1fr);padding-top:env(safe-area-inset-top,0px)}
+body.cmp .manual-top{flex:none;padding:6px max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px));padding-top:calc(6px + env(safe-area-inset-top,0px));background:#000}
+body.cmp .manual-link{background:rgba(255,255,255,.14);color:#fff;border-color:transparent;min-height:32px;font-size:.8125rem}
+body.cmp .stage{flex:1;min-height:0;gap:2px;grid-template-rows:minmax(0,1fr)}
 body.cmp .stage.stack{grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(2,minmax(0,1fr))}
 body.cmp .clip{position:relative;min-height:0;gap:0}
 body.cmp .clip-head{flex:none;background:#000;padding:3px 10px}
@@ -134,6 +139,7 @@ body.cmp .screen{flex:1;height:auto;min-height:0;aspect-ratio:auto;max-height:no
 </style>
 
 <main>
+<nav class="manual-top" aria-label="使い方"><a class="manual-link" href="https://doza0324.github.io/douga-mikurabe/manual.html" target="_blank" rel="noopener">マニュアルを見る</a></nav>
 <header>
   <h1>動画見比べツール</h1>
   <p class="lead">2本の動画を並べ、開始やインパクトの位置をそろえて同時に再生し、MP4形式で保存できます。</p>
