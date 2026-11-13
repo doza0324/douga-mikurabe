@@ -78,7 +78,14 @@ input[type=range]{width:100%;margin:0;accent-color:var(--accent);display:block;h
 .marks .pt.unset i{color:var(--muted)}
 .pt-btns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
 .pt-btns .btn.done{border-color:var(--accent)}
+.pt-btns .btn{white-space:normal;overflow-wrap:anywhere;line-height:1.25;padding:6px 3px;min-height:36px;font-size:.75rem}
+#sync-seg{flex-wrap:wrap}
 .pt-tools{display:inline-flex;gap:6px;flex-wrap:wrap}
+.pt-names{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.pt-name-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.pt-name-list label{display:flex;align-items:center;gap:6px;font-weight:700;min-width:0}
+.pt-name-list input{flex:1;min-width:0;font:inherit;font-weight:500;font-size:.875rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+body.cmp .pt-names{display:none}
 .sync-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sync-row .seg button{min-width:40px}
 .readout .pts{display:flex;flex-wrap:wrap;justify-content:center;gap:0 8px}
@@ -173,6 +180,7 @@ body.cmp .screen{flex:1;height:auto;min-height:0;aspect-ratio:auto;max-height:no
   <span id="resume-text"></span>
   <span class="proj-btns"><button type="button" class="cbtn" id="resume-open">続きを開く</button><button type="button" class="cbtn" id="resume-clear">消す</button></span>
 </div>
+<div class="pt-names" id="pt-names" role="group" aria-label="地点の名前"><span class="toggle">地点の名前（任意）</span><div class="pt-name-list" id="pt-name-list"></div></div>
 <p class="proj-note" id="proj-note" role="status" hidden></p>
 <p class="notice" id="sample-note">いまはサンプル動画（架空の棒人形）です。「動画を選ぶ」で入れ替えられます。</p>
 
@@ -266,7 +274,16 @@ const digits=()=>FRAME<1/40?3:2;
 /* 地点：各動画に①〜⑤（初期は3つ）。最初の地点から最後の地点までを切り出して再生する */
 const CIRC='①②③④⑤',MINP=3,MAXP=5;
 let NPTS=3,syncIdx=0;
-const ptName=i=>'地点'+CIRC[i];
+const ptLabels=['','','','',''];
+// 名前があれば「②インパクト」、なければ「地点②」
+const ptName=i=>ptLabels[i]?CIRC[i]+ptLabels[i]:'地点'+CIRC[i];
+const ptShort=i=>CIRC[i]+(ptLabels[i]||'');
+function refreshPointLabels(){
+  for(const c of clips)for(let i=0;i<NPTS;i++){const b=$(`pt-${c.id}-${i}`);if(b)b.textContent=ptName(i)}
+  [...$('sync-seg').children].forEach((b,i)=>{b.textContent=ptShort(i);b.setAttribute('aria-label',ptName(i)+'でそろえる')});
+  if(syncIdx>0)$('to-base').textContent=ptName(syncIdx)+'へ';
+  clips.forEach(drawEditor);drawLead();if(mode==='cmp')setLabels(tau);
+}
 const mk=(id,pts)=>{
   const c={id,v:$('video-'+id),url:null,dur:0,pts:[...pts,0,0].slice(0,MAXP),set:[true,true,true,false,false],k:1,sample:true,want:null,lastSeek:0};
   Object.defineProperty(c,'in',{get(){return this.pts[0]}});
@@ -315,6 +332,16 @@ function buildPointButtons(){
     b.setAttribute('aria-pressed',i===syncIdx);b.addEventListener('click',()=>setSync(i));seg.append(b);
   }
   $('pt-add').disabled=NPTS>=MAXP;$('pt-del').hidden=NPTS<=MINP;
+  const list=$('pt-name-list');list.replaceChildren();
+  for(let i=0;i<NPTS;i++){
+    const lb=document.createElement('label'),inp=document.createElement('input');
+    lb.append(CIRC[i]);inp.id='pt-name-'+i;inp.maxLength=10;inp.value=ptLabels[i];
+    inp.placeholder=['例：足を上げる','例：インパクト','例：1歩目の着地','例：送球','例：着地'][i];
+    inp.setAttribute('aria-label',`地点${CIRC[i]}の名前`);
+    inp.addEventListener('input',()=>{ptLabels[i]=inp.value.trim();refreshPointLabels();markDirty()});
+    lb.append(inp);list.append(lb);
+  }
+  refreshPointLabels();
 }
 function setCount(n){
   const old=NPTS;NPTS=clamp(n,MINP,MAXP);
@@ -431,7 +458,7 @@ function drawEditor(c){
   }
   const read=$('read-'+c.id);read.textContent='';const b=document.createElement('b');b.textContent=`${(c.want??t).toFixed(digits())}秒`;
   const dg=digits(),l1=document.createElement('span');l1.className='pts';
-  for(let i=0;i<NPTS;i++){const e=document.createElement('span');e.textContent=`${CIRC[i]} ${c.set[i]?c.pts[i].toFixed(dg):'未記録'}`;l1.append(e)}
+  for(let i=0;i<NPTS;i++){const e=document.createElement('span');e.textContent=`${ptShort(i)} ${c.set[i]?c.pts[i].toFixed(dg):'未記録'}`;l1.append(e)}
   read.append(b,l1);
 }
 
@@ -467,8 +494,8 @@ const nameOf=c=>$('name-'+c.id).value.trim()||c.id.toUpperCase();
 // 区間ごとの秒数：①→②、②→③…と、最初から最後（全体）
 function intervals(){
   const rows=[];
-  for(let i=0;i<NPTS-1;i++)rows.push([`${CIRC[i]}→${CIRC[i+1]}`,c=>c.set[i]&&c.set[i+1]?(c.pts[i+1]-c.pts[i])/c.k:null]);
-  rows.push([`${CIRC[0]}→${CIRC[NPTS-1]}（全体）`,c=>c.set[0]&&c.set[NPTS-1]?(c.pts[NPTS-1]-c.pts[0])/c.k:null]);
+  for(let i=0;i<NPTS-1;i++)rows.push([`${ptShort(i)}→${ptShort(i+1)}`,c=>c.set[i]&&c.set[i+1]?(c.pts[i+1]-c.pts[i])/c.k:null]);
+  rows.push([`${ptShort(0)}→${ptShort(NPTS-1)}（全体）`,c=>c.set[0]&&c.set[NPTS-1]?(c.pts[NPTS-1]-c.pts[0])/c.k:null]);
   return rows;
 }
 function drawLead(){
@@ -950,7 +977,7 @@ function snapshot(){
       pts:(p?p.pts:c.pts).slice(0,NPTS),set:(p?p.set:c.set).slice(0,NPTS),k:c.k,
       file:p?p.file:(c.file&&!c.sample?{name:c.file.name,size:c.file.size}:null)};
   }
-  return{app:PROJ.app,version:PROJ.version,savedAt:new Date().toISOString(),npts:NPTS,syncIdx,rate,stack:layoutChoice,step:Math.round(1/FRAME),clips:clipsOut};
+  return{app:PROJ.app,version:PROJ.version,savedAt:new Date().toISOString(),npts:NPTS,syncIdx,labels:ptLabels.slice(0,NPTS),rate,stack:layoutChoice,step:Math.round(1/FRAME),clips:clipsOut};
 }
 function markDirty(){
   if(restoring)return;
@@ -988,7 +1015,9 @@ function applyProject(p){
   try{
     if(pb.on)stopPlay();
     setMode('edit');
-    NPTS=p.npts;buildPointButtons();
+    NPTS=p.npts;
+    for(let i=0;i<MAXP;i++)ptLabels[i]=Array.isArray(p.labels)&&typeof p.labels[i]==='string'?p.labels[i].slice(0,10):'';
+    buildPointButtons();
     for(const c of clips){
       const x=p.clips[c.id];
       $('name-'+c.id).value=String(x.name??'').slice(0,20);
