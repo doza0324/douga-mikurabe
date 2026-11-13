@@ -68,11 +68,20 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(1.5rem,5vw,2.125re
 .pick{position:relative;display:block;text-align:center;font-weight:700;font-size:.875rem;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:6px 8px;cursor:pointer}
 .pick input{position:absolute;width:1px;height:1px;opacity:0}
 .pick:focus-within{outline:2px solid var(--accent);outline-offset:2px}
-.range-wrap{position:relative;padding-bottom:12px}
+.range-wrap{position:relative;padding-bottom:26px}
 input[type=range]{width:100%;margin:0;accent-color:var(--accent);display:block;height:28px}
-.marks{position:absolute;left:8px;right:8px;bottom:2px;height:8px;background:var(--sunken);border-radius:2px}
+.marks{position:absolute;left:8px;right:8px;bottom:14px;height:8px;background:var(--sunken);border-radius:2px}
 .marks .kept{position:absolute;top:0;bottom:0;background:var(--accent);opacity:.45;border-radius:2px}
-.marks .imp{position:absolute;top:-3px;bottom:-3px;width:3px;margin-left:-1px;background:var(--ink)}
+.marks .pt{position:absolute;top:-3px;bottom:-3px;width:3px;margin-left:-1px;background:var(--ink)}
+.marks .pt.unset{background:var(--muted);opacity:.5}
+.marks .pt i{position:absolute;top:13px;left:50%;transform:translateX(-50%);font-style:normal;font-size:.625rem;line-height:1;color:var(--ink);font-weight:700}
+.marks .pt.unset i{color:var(--muted)}
+.pt-btns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.pt-btns .btn.done{border-color:var(--accent)}
+.pt-tools{display:inline-flex;gap:6px;flex-wrap:wrap}
+.sync-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sync-row .seg button{min-width:40px}
+.readout .pts{display:flex;flex-wrap:wrap;justify-content:center;gap:0 8px}
 .btns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
 .marksbtn{grid-template-columns:minmax(0,1fr) minmax(0,1.7fr) minmax(0,1fr)}
 .btn{white-space:nowrap;font:inherit;font-size:.8125rem;font-weight:700;background:var(--sunken);color:var(--ink);border:1px solid transparent;border-radius:6px;padding:7px 2px;cursor:pointer;min-width:0}
@@ -142,7 +151,7 @@ body.cmp .screen{flex:1;height:auto;min-height:0;aspect-ratio:auto;max-height:no
 <nav class="manual-top" aria-label="使い方"><a class="manual-link" href="https://doza0324.github.io/douga-mikurabe/manual.html" target="_blank" rel="noopener">マニュアルを見る</a></nav>
 <header>
   <h1>動画見比べツール</h1>
-  <p class="lead">2本の動画を並べ、開始やインパクトの位置をそろえて同時に再生し、MP4形式で保存できます。</p>
+  <p class="lead">2本の動画を並べ、記録した地点をそろえて同時に再生し、MP4形式で保存できます。</p>
 </header>
 
 <div class="bar">
@@ -151,6 +160,10 @@ body.cmp .screen{flex:1;height:auto;min-height:0;aspect-ratio:auto;max-height:no
     <button type="button" id="mode-cmp" aria-pressed="false">2 見比べる</button>
   </div>
   <label class="toggle">コマ送り <select class="step-size" id="step-edit" aria-label="コマ送りの細かさ"><option value="15">1/15秒</option><option value="30" selected>1/30秒</option><option value="60">1/60秒</option><option value="120">1/120秒</option><option value="240">1/240秒</option></select></label>
+  <div class="pt-tools">
+    <button type="button" class="cbtn" id="pt-add">地点を増やす</button>
+    <button type="button" class="cbtn" id="pt-del" hidden>地点を減らす</button>
+  </div>
   <div class="proj-btns">
     <button type="button" class="cbtn" id="proj-save">プロジェクト保存</button>
     <label class="cbtn proj-open"><input type="file" id="proj-file" accept=".json,application/json">プロジェクトを開く</label>
@@ -166,24 +179,24 @@ body.cmp .screen{flex:1;height:auto;min-height:0;aspect-ratio:auto;max-height:no
 <div class="stage" id="stage">
   <div class="clip" data-id="a">
     <div class="clip-head"><span class="dot"></span><input class="name" id="name-a" value="選手A" maxlength="20" aria-label="1人目の名前"><span class="tag" id="tag-a">サンプル</span><span class="shot" id="shot-a" hidden></span><input class="memo" id="memo-a" maxlength="60" placeholder="一言メモ" aria-label="1人目の一言メモ"></div>
-    <div class="screen" id="screen-a"><video id="video-a" muted playsinline preload="auto"></video><span class="flash" id="flash-a" hidden>インパクト</span><span class="hold" id="hold-a" hidden>再生完了</span></div>
+    <div class="screen" id="screen-a"><video id="video-a" muted playsinline preload="auto"></video><span class="flash" id="flash-a" hidden></span><span class="hold" id="hold-a" hidden>再生完了</span></div>
     <div class="editor" id="editor-a">
       <label class="pick"><input type="file" id="file-a" accept="video/*">動画を選ぶ</label>
-      <div class="range-wrap"><input type="range" id="scrub-a" min="0" max="1" step="0.001" value="0" aria-label="選手Aの再生位置"><div class="marks"><div class="kept" id="kept-a"></div><div class="imp" id="imp-a"></div></div></div>
+      <div class="range-wrap"><input type="range" id="scrub-a" min="0" max="1" step="0.001" value="0" aria-label="選手Aの再生位置"><div class="marks" id="marks-a"><div class="kept" id="kept-a"></div></div></div>
       <div class="readout" id="read-a"></div>
       <div class="btns"><button type="button" class="btn" id="back-a" aria-label="1コマ戻す">◀</button><button type="button" class="btn" id="toggle-a">再生</button><button type="button" class="btn" id="fwd-a" aria-label="1コマ進める">▶</button></div>
-      <div class="btns marksbtn"><button type="button" class="btn" id="set-in-a">開始</button><button type="button" class="btn" id="set-imp-a">インパクト</button><button type="button" class="btn" id="set-out-a">終了</button></div>
+      <div class="pt-btns" id="ptb-a" role="group" aria-label="地点を記録"></div>
     </div>
   </div>
   <div class="clip" data-id="b">
     <div class="clip-head"><span class="dot"></span><input class="name" id="name-b" value="選手B" maxlength="20" aria-label="2人目の名前"><span class="tag" id="tag-b">サンプル</span><span class="shot" id="shot-b" hidden></span><input class="memo" id="memo-b" maxlength="60" placeholder="一言メモ" aria-label="2人目の一言メモ"></div>
-    <div class="screen" id="screen-b"><video id="video-b" muted playsinline preload="auto"></video><span class="flash" id="flash-b" hidden>インパクト</span><span class="hold" id="hold-b" hidden>再生完了</span></div>
+    <div class="screen" id="screen-b"><video id="video-b" muted playsinline preload="auto"></video><span class="flash" id="flash-b" hidden></span><span class="hold" id="hold-b" hidden>再生完了</span></div>
     <div class="editor" id="editor-b">
       <label class="pick"><input type="file" id="file-b" accept="video/*">動画を選ぶ</label>
-      <div class="range-wrap"><input type="range" id="scrub-b" min="0" max="1" step="0.001" value="0" aria-label="選手Bの再生位置"><div class="marks"><div class="kept" id="kept-b"></div><div class="imp" id="imp-b"></div></div></div>
+      <div class="range-wrap"><input type="range" id="scrub-b" min="0" max="1" step="0.001" value="0" aria-label="選手Bの再生位置"><div class="marks" id="marks-b"><div class="kept" id="kept-b"></div></div></div>
       <div class="readout" id="read-b"></div>
       <div class="btns"><button type="button" class="btn" id="back-b" aria-label="1コマ戻す">◀</button><button type="button" class="btn" id="toggle-b">再生</button><button type="button" class="btn" id="fwd-b" aria-label="1コマ進める">▶</button></div>
-      <div class="btns marksbtn"><button type="button" class="btn" id="set-in-b">開始</button><button type="button" class="btn" id="set-imp-b">インパクト</button><button type="button" class="btn" id="set-out-b">終了</button></div>
+      <div class="pt-btns" id="ptb-b" role="group" aria-label="地点を記録"></div>
     </div>
   </div>
 </div>
@@ -199,7 +212,7 @@ body.cmp .screen{flex:1;height:auto;min-height:0;aspect-ratio:auto;max-height:no
       <button type="button" class="cbtn play" id="play">再生</button>
       <button type="button" class="cbtn" id="to-head">頭出し</button>
       <button type="button" class="cbtn" id="step-fwd" aria-label="1コマ進める">▶</button>
-      <button type="button" class="cbtn" id="to-base">インパクトへ</button>
+      <button type="button" class="cbtn" id="to-base" hidden>地点へ</button>
     </div>
     <span class="tau" id="tau-read">0.00秒</span>
     <div class="speed" role="group" aria-label="再生速度">
@@ -212,10 +225,7 @@ body.cmp .screen{flex:1;height:auto;min-height:0;aspect-ratio:auto;max-height:no
     <label class="toggle"><input type="checkbox" id="loop" checked>くり返す</label>
   </div>
   <div class="controls">
-    <div class="seg" role="group" aria-label="そろえる位置">
-      <button type="button" id="sync-start" aria-pressed="false">開始でそろえる</button>
-      <button type="button" id="sync-imp" aria-pressed="true">インパクトでそろえる</button>
-    </div>
+    <div class="sync-row"><span class="toggle">そろえる地点</span><div class="seg" id="sync-seg" role="group" aria-label="そろえる地点"></div></div>
     <div class="play-row">
       <button type="button" class="cbtn" id="compare" aria-pressed="false">比較</button>
       <button type="button" class="cbtn" id="layout" >縦並び表示</button>
@@ -253,8 +263,67 @@ const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let FRAME=1/30; // コマ送り1回で進む秒数
 const digits=()=>FRAME<1/40?3:2;
-const mk=(id,inT,imp,out)=>({id,v:$('video-'+id),url:null,dur:0,in:inT,imp,out,impSet:true,k:1,sample:true,want:null,lastSeek:0});
-const clips=[mk('a',.7,1.2,2.0),mk('b',1.26,1.6,2.5)];
+/* 地点：各動画に①〜⑤（初期は3つ）。最初の地点から最後の地点までを切り出して再生する */
+const CIRC='①②③④⑤',MINP=3,MAXP=5;
+let NPTS=3,syncIdx=0;
+const ptName=i=>'地点'+CIRC[i];
+const mk=(id,pts)=>{
+  const c={id,v:$('video-'+id),url:null,dur:0,pts:[...pts,0,0].slice(0,MAXP),set:[true,true,true,false,false],k:1,sample:true,want:null,lastSeek:0};
+  Object.defineProperty(c,'in',{get(){return this.pts[0]}});
+  Object.defineProperty(c,'out',{get(){return this.pts[NPTS-1]}});
+  return c;
+};
+const clips=[mk('a',[.7,1.2,2.0]),mk('b',[1.26,1.6,2.5])];
+// 未記録の地点は、前後の記録済み地点（なければ動画の最初と最後）の間に均等に置く
+function normalize(c){
+  const d=c.dur||Math.max(...c.pts.slice(0,NPTS));
+  let i=0;
+  while(i<NPTS){
+    if(c.set[i]){i++;continue}
+    let j=i;while(j<NPTS&&!c.set[j])j++;
+    const a=i>0?c.pts[i-1]:0,b=j<NPTS?c.pts[j]:d;
+    const lo=i>0?a:0,hi=j<NPTS?b:d;
+    const n=j-i,first=i===0,last=j===NPTS;
+    for(let k=0;k<n;k++){
+      let f;
+      if(first&&last)f=n===1?0:k/(n-1);
+      else if(first)f=n===1?0:k/n;
+      else if(last)f=(k+1)/n;
+      else f=(k+1)/(n+1);
+      c.pts[i+k]=lo+(hi-lo)*f;
+    }
+    i=j;
+  }
+}
+function setPoint(c,i){
+  const t=c.want??c.v.currentTime;
+  for(let j=0;j<i;j++)if(c.set[j]&&c.pts[j]>=t-1e-3){toast(`${ptName(i)}は、${ptName(j)}より後の場面で記録してください。`);return}
+  for(let j=i+1;j<NPTS;j++)if(c.set[j]&&c.pts[j]<=t+1e-3){toast(`${ptName(i)}は、${ptName(j)}より前の場面で記録してください。`);return}
+  c.pts[i]=t;c.set[i]=true;normalize(c);drawEditor(c);refreshTimeline();
+}
+function buildPointButtons(){
+  for(const c of clips){
+    const box=$('ptb-'+c.id);box.replaceChildren();
+    for(let i=0;i<NPTS;i++){
+      const b=document.createElement('button');b.type='button';b.className='btn';b.id=`pt-${c.id}-${i}`;b.textContent=ptName(i);
+      b.addEventListener('click',()=>setPoint(c,i));box.append(b);
+    }
+  }
+  const seg=$('sync-seg');seg.replaceChildren();
+  for(let i=0;i<NPTS;i++){
+    const b=document.createElement('button');b.type='button';b.textContent=CIRC[i];b.setAttribute('aria-label',ptName(i)+'でそろえる');
+    b.setAttribute('aria-pressed',i===syncIdx);b.addEventListener('click',()=>setSync(i));seg.append(b);
+  }
+  $('pt-add').disabled=NPTS>=MAXP;$('pt-del').hidden=NPTS<=MINP;
+}
+function setCount(n){
+  const old=NPTS;NPTS=clamp(n,MINP,MAXP);
+  for(const c of clips){for(let i=old;i<NPTS;i++)c.set[i]=false;normalize(c)}
+  if(syncIdx>=NPTS)syncIdx=0;
+  buildPointButtons();clips.forEach(drawEditor);refreshTimeline();
+}
+$('pt-add').addEventListener('click',()=>{setCount(NPTS+1);toast(`${ptName(NPTS-1)}を追加しました。2人とも記録してください。`)});
+$('pt-del').addEventListener('click',()=>{const n=ptName(NPTS-1);setCount(NPTS-1);toast(`${n}を外しました。`)});
 
 /* シーク要求をまとめ、動画の処理が追いつかないときは最新の位置だけ反映する */
 function seekTo(c,t){
@@ -321,10 +390,10 @@ for(const c of clips){
   });
   c.v.addEventListener('loadedmetadata',()=>{
     c.dur=c.v.duration||0;
-    if(!c.sample){c.in=0;c.out=c.dur;c.imp=c.dur/2;c.impSet=false}
+    if(!c.sample){c.set=c.set.map(()=>false);normalize(c)}
     if(!c.sample&&c.pending)applyPending(c);
     $('scrub-'+c.id).max=c.dur;
-    seekTo(c,c.sample?c.imp:c.in);drawEditor(c);refreshTimeline();
+    seekTo(c,c.sample?c.pts[syncIdx]:c.in);drawEditor(c);refreshTimeline();
   });
   c.v.addEventListener('error',()=>{
     if(c.sample)return;
@@ -348,31 +417,30 @@ for(const c of clips){
     if(c.v.currentTime>=c.dur-.02)c.v.currentTime=0;
     c.v.play().catch(()=>{});
   });
-  $('set-in-'+c.id).addEventListener('click',()=>{c.in=Math.min(c.v.currentTime,c.out-.05);if(c.imp<c.in){c.imp=c.in;}drawEditor(c);refreshTimeline()});
-  $('set-out-'+c.id).addEventListener('click',()=>{c.out=Math.max(c.v.currentTime,c.in+.05);if(c.imp>c.out){c.imp=c.out;}drawEditor(c);refreshTimeline()});
-  $('set-imp-'+c.id).addEventListener('click',()=>{
-    c.imp=c.v.currentTime;c.impSet=true;
-    if(c.imp<c.in)c.in=c.imp;if(c.imp>c.out)c.out=c.imp;
-    drawEditor(c);refreshTimeline();
-  });
 }
 function drawEditor(c){
   if(!c.dur)return;
   const p=x=>x/c.dur*100,t=c.v.currentTime;
   if(document.activeElement!==$('scrub-'+c.id)||c.v.paused)$('scrub-'+c.id).value=c.want??t;
   const kept=$('kept-'+c.id);kept.style.left=p(c.in)+'%';kept.style.width=p(c.out-c.in)+'%';
-  const imp=$('imp-'+c.id);imp.style.left=p(c.imp)+'%';imp.hidden=!c.impSet;
+  const marks=$('marks-'+c.id);marks.querySelectorAll('.pt').forEach(e=>e.remove());
+  for(let i=0;i<NPTS;i++){
+    const m=document.createElement('div');m.className='pt'+(c.set[i]?'':' unset');m.style.left=p(c.pts[i])+'%';
+    const lb=document.createElement('i');lb.textContent=CIRC[i];m.append(lb);marks.append(m);
+    const btn=$(`pt-${c.id}-${i}`);if(btn)btn.classList.toggle('done',c.set[i]);
+  }
   const read=$('read-'+c.id);read.textContent='';const b=document.createElement('b');b.textContent=`${(c.want??t).toFixed(digits())}秒`;
-  const dg=digits(),l1=document.createElement('span');l1.textContent=`切り出し ${c.in.toFixed(dg)}〜${c.out.toFixed(dg)}`;
-  const l2=document.createElement('span');l2.textContent=c.impSet?`インパクト ${c.imp.toFixed(dg)}`:'インパクト未設定';read.append(b,l1,l2);
+  const dg=digits(),l1=document.createElement('span');l1.className='pts';
+  for(let i=0;i<NPTS;i++){const e=document.createElement('span');e.textContent=`${CIRC[i]} ${c.set[i]?c.pts[i].toFixed(dg):'未記録'}`;l1.append(e)}
+  read.append(b,l1);
 }
 
-/* 見比べる：τ はそろえる位置（開始またはインパクト）を0とした実時間の秒 */
-let sync='imp';
+/* 見比べる：τ はそろえる地点を0とした実時間の秒 */
 const ready=()=>clips.filter(c=>c.dur>0);
-const base=c=>sync==='start'?c.in:c.imp;
+const base=c=>c.pts[syncIdx];
 const tauOf=c=>({lo:(c.in-base(c))/c.k,hi:(c.out-base(c))/c.k});
-const impTau=c=>(c.imp-base(c))/c.k;
+const ptTau=(c,i)=>(c.pts[i]-base(c))/c.k;
+const ptAt=(c,t)=>{for(let i=0;i<NPTS;i++)if(c.set[i]&&Math.abs(t-ptTau(c,i))<.04)return i;return -1};
 const tauMin=()=>Math.min(...ready().map(c=>tauOf(c).lo));
 const tauMax=()=>Math.max(...ready().map(c=>tauOf(c).hi));
 const target=(c,t)=>clamp(base(c)+t*c.k,c.in,c.out);
@@ -391,17 +459,22 @@ function refreshTimeline(){
     if(!c.dur){bar.hidden=true;continue}
     const q=tauOf(c);bar.hidden=false;bar.style.left=pct(q.lo)+'%';bar.style.width=(pct(q.hi)-pct(q.lo))+'%';
   }
-  for(const c of clips){
-    const tk=$('tick-'+c.id);tk.hidden=!c.dur||!c.impSet;tk.style.left=pct(impTau(c))+'%';
-  }
+  for(const c of clips)$('tick-'+c.id).hidden=true;
   drawLead();
   if(mode==='cmp'&&!pb.on)showTau(tau);
 }
 const nameOf=c=>$('name-'+c.id).value.trim()||c.id.toUpperCase();
+// 区間ごとの秒数：①→②、②→③…と、最初から最後（全体）
+function intervals(){
+  const rows=[];
+  for(let i=0;i<NPTS-1;i++)rows.push([`${CIRC[i]}→${CIRC[i+1]}`,c=>c.set[i]&&c.set[i+1]?(c.pts[i+1]-c.pts[i])/c.k:null]);
+  rows.push([`${CIRC[0]}→${CIRC[NPTS-1]}（全体）`,c=>c.set[0]&&c.set[NPTS-1]?(c.pts[NPTS-1]-c.pts[0])/c.k:null]);
+  return rows;
+}
 function drawLead(){
   const r=ready(),box=$('summary');
   if(box.hidden)return;
-  const rows=[['開始→インパクト',c=>c.impSet?(c.imp-c.in)/c.k:null],['インパクト→終了',c=>c.impSet?(c.out-c.imp)/c.k:null],['開始→終了',c=>(c.out-c.in)/c.k]];
+  const rows=intervals();
   const tb=document.createElement('table'),head=tb.createTHead().insertRow(),body=tb.createTBody();
   const cell=(row,text,tag='td')=>{const e=document.createElement(tag);e.textContent=text;row.append(e)};
   cell(head,'時間','th');r.forEach(c=>cell(head,nameOf(c),'th'));if(r.length===2)cell(head,'差','th');
@@ -423,13 +496,14 @@ for(const c of clips){
 }
 function tauText(t){
   const abs=Math.abs(t).toFixed(digits());
-  return Math.abs(t)<.001?(sync==='start'?'開始':'インパクト'):sync==='start'?`開始から ${abs}秒`:`インパクトの ${abs}秒${t<0?'前':'後'}`;
+  const n=ptName(syncIdx);
+  return Math.abs(t)<.001?n:t>0&&syncIdx===0?`${n}から ${abs}秒`:`${n}の ${abs}秒${t<0?'前':'後'}`;
 }
 function setLabels(t){
   $('tau').value=t;
   $('tau-read').textContent=tauText(t);
   for(const c of clips){
-    $('flash-'+c.id).hidden=!(c.impSet&&Math.abs(t-impTau(c))<.04);
+    const at=c.dur?ptAt(c,t):-1,fl=$('flash-'+c.id);fl.hidden=at<0;if(at>=0)fl.textContent=ptName(at);
     const r=tauOf(c),done=t>=r.hi-.02,early=t<r.lo-.001;
     const h=$('hold-'+c.id);h.hidden=!c.dur||!(done||early);h.textContent=done?'再生完了':'再生前';
   }
@@ -507,16 +581,14 @@ function tick(now){
 $('play').addEventListener('click',()=>pb.on?stopPlay():startPlay());
 $('to-head').addEventListener('click',()=>{if(pb.on)stopPlay();showTau(tauMin())});
 $('to-base').addEventListener('click',()=>{if(pb.on)stopPlay();showTau(clamp(0,tauMin(),tauMax()))});
-function setSync(m){
+function setSync(i){
   if(pb.on)stopPlay();
-  sync=m;
-  $('sync-start').setAttribute('aria-pressed',m==='start');
-  $('sync-imp').setAttribute('aria-pressed',m==='imp');
-  $('to-base').hidden=m==='start'; // 開始でそろえるときは「頭出し」と同じ位置になる
+  syncIdx=clamp(i,0,NPTS-1);
+  [...$('sync-seg').children].forEach((b,k)=>b.setAttribute('aria-pressed',k===syncIdx));
+  $('to-base').hidden=syncIdx===0; // ①でそろえるときは「頭出し」と同じ位置になる
+  $('to-base').textContent=ptName(syncIdx)+'へ';
   tau=0;refreshTimeline();showTau(clamp(0,tauMin(),tauMax()));
 }
-$('sync-start').addEventListener('click',()=>setSync('start'));
-$('sync-imp').addEventListener('click',()=>setSync('imp'));
 let layoutChoice=false; // 初期表示は横並び
 function chooseLayout(){
   const st=$('stage');
@@ -641,8 +713,8 @@ function pill(g,text,x,y,bg,fg,u,right){
 /* 各映像の左下に、その選手の秒数を箇条書きで載せる */
 function exSummary(g,L,c,x,bottom,font){
   const q=v=>v==null?'未記録':v.toFixed(2)+'秒';
-  const rows=[`・開始→インパクト ${q(c.impSet?(c.imp-c.in)/c.k:null)}`,`・インパクト→終了 ${q(c.impSet?(c.out-c.imp)/c.k:null)}`,`・開始→終了 ${q((c.out-c.in)/c.k)}`];
-  const size=Math.round(Math.min(L.cellW*.05,L.cellH*.058));
+  const rows=intervals().map(([label,fn])=>`・${label} ${q(fn(c))}`);
+  const size=Math.round(Math.min(L.cellW*.05,L.cellH*.058)*Math.min(1,3.6/rows.length));
   const lh=size*1.4,pad=size*.5;
   g.font=`700 ${size}px ${font}`;g.textAlign='left';g.textBaseline='middle';
   const w=Math.min(Math.max(...rows.map(t=>g.measureText(t).width))+pad*2,L.cellW-size);
@@ -681,7 +753,7 @@ function exDraw(g,L,r,t){
     g.drawImage(c.v,-dw/2,-dh/2,dw,dh);
     g.restore();
     const bottom=vy+L.cellH-12*u;
-    if(c.impSet&&Math.abs(t-impTau(c))<.04)pill(g,'インパクト',x+12*u,vy+12*u+44*u,'#0e6b4a','#fff',u,false);
+    const at=ptAt(c,t);if(at>=0)pill(g,ptName(at),x+12*u,vy+12*u+44*u,'#0e6b4a','#fff',u,false);
     exSummary(g,L,c,x,vy+L.cellH,font);
     const q=tauOf(c),done=t>=q.hi-.02,early=t<q.lo-.001;
     if(done||early)pill(g,done?'再生完了':'再生前',x+L.cellW-12*u,bottom,'rgba(0,0,0,.7)','#fff',u,true);
@@ -791,7 +863,7 @@ function exName(){
 function openExport(){
   if(pb.on)stopPlay();
   const L=exLayout(ready()),dur=(tauMax()-tauMin())/rate+1;
-  $('ex-info').textContent=`${RATE_NAME[rate]}・${sync==='start'?'開始':'インパクト'}でそろえる・${L.stack?'縦':'横'}並び。動画の長さは約${Math.ceil(dur)}秒、大きさは ${L.W}×${L.H} です。`;
+  $('ex-info').textContent=`${RATE_NAME[rate]}・${ptName(syncIdx)}でそろえる・${L.stack?'縦':'横'}並び。動画の長さは約${Math.ceil(dur)}秒、大きさは ${L.W}×${L.H} です。`;
   $('ex-note').textContent='';$('ex-progress').hidden=true;$('ex-preview').hidden=true;
   $('ex-start').hidden=false;$('ex-save').hidden=true;$('ex-close').textContent='閉じる';$('ex-bar').style.width='0';
   $('ex-sheet').hidden=false;
@@ -864,7 +936,7 @@ $('ex-save').addEventListener('click',async()=>{
 });
 
 /* プロジェクト：編集内容だけをJSONで持つ。動画は再開時に選び直す */
-const PROJ={app:'douga-mikurabe',version:1,key:'douga-mikurabe-last'};
+const PROJ={app:'douga-mikurabe',version:2,key:'douga-mikurabe-last'};
 let dirtyTimer=0,toastTimer=0;
 function toast(msg){
   const t=$('toast');t.textContent=msg;t.hidden=false;
@@ -875,10 +947,10 @@ function snapshot(){
   for(const c of clips){
     const p=c.pending;
     clipsOut[c.id]={name:$('name-'+c.id).value,memo:$('memo-'+c.id).value,
-      in:p?p.in:c.in,imp:p?p.imp:c.imp,out:p?p.out:c.out,impSet:p?p.impSet:c.impSet,k:c.k,
+      pts:(p?p.pts:c.pts).slice(0,NPTS),set:(p?p.set:c.set).slice(0,NPTS),k:c.k,
       file:p?p.file:(c.file&&!c.sample?{name:c.file.name,size:c.file.size}:null)};
   }
-  return{app:PROJ.app,version:PROJ.version,savedAt:new Date().toISOString(),sync,rate,stack:layoutChoice,step:Math.round(1/FRAME),clips:clipsOut};
+  return{app:PROJ.app,version:PROJ.version,savedAt:new Date().toISOString(),npts:NPTS,syncIdx,rate,stack:layoutChoice,step:Math.round(1/FRAME),clips:clipsOut};
 }
 function markDirty(){
   if(restoring)return;
@@ -890,22 +962,38 @@ function markDirty(){
   },400);
 }
 const finite=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0;
-function validProject(p){
-  return p&&p.app===PROJ.app&&p.clips&&['a','b'].every(k=>{
-    const x=p.clips[k];return x&&finite(x.in)&&finite(x.imp)&&finite(x.out)&&x.out>=x.in;
-  });
+// 旧形式（開始・インパクト・終了）も地点①②③として読む
+function upgradeProject(p){
+  if(!p||p.app!==PROJ.app||!p.clips)return null;
+  const out={...p,clips:{}};
+  for(const k of ['a','b']){
+    const x=p.clips[k];if(!x)return null;
+    let pts,set;
+    if(Array.isArray(x.pts)){pts=x.pts;set=Array.isArray(x.set)?x.set.map(Boolean):pts.map(()=>true)}
+    else if(finite(x.in)&&finite(x.imp)&&finite(x.out)){pts=[x.in,x.imp,x.out];set=[true,!!x.impSet,true]}
+    else return null;
+    if(pts.length<MINP||pts.length>MAXP||!pts.every(finite))return null;
+    out.clips[k]={...x,pts,set};
+  }
+  out.npts=out.clips.a.pts.length;
+  if(out.clips.b.pts.length!==out.npts)return null;
+  if(!Number.isInteger(p.syncIdx))out.syncIdx=p.sync==='imp'?1:0;
+  return out;
 }
+const validProject=p=>!!upgradeProject(p);
 let restoring=false;
 function applyProject(p){
+  p=upgradeProject(p);
   restoring=true;
   try{
     if(pb.on)stopPlay();
     setMode('edit');
+    NPTS=p.npts;buildPointButtons();
     for(const c of clips){
       const x=p.clips[c.id];
       $('name-'+c.id).value=String(x.name??'').slice(0,20);
       $('memo-'+c.id).value=String(x.memo??'').slice(0,60);
-      const data={in:x.in,imp:x.imp,out:x.out,impSet:!!x.impSet,file:x.file&&typeof x.file.name==='string'?{name:x.file.name,size:Number(x.file.size)||0}:null};
+      const data={pts:x.pts.slice(),set:x.set.slice(),file:x.file&&typeof x.file.name==='string'?{name:x.file.name,size:Number(x.file.size)||0}:null};
       c.k=[1,2,4,8].includes(x.k)?x.k:1;
       c.mismatch=false;
       if(data.file&&!(c.file&&!c.sample&&c.file.size===data.file.size)){c.pending=data}
@@ -915,7 +1003,7 @@ function applyProject(p){
         if(c.dur){seekTo(c,c.in);drawEditor(c)}
       }
     }
-    if(p.sync==='start'||p.sync==='imp')setSync(p.sync);
+    setSync(Number.isInteger(p.syncIdx)?p.syncIdx:0);
     if([1,.5,.25,.1].includes(p.rate))setRate(p.rate);
     if([15,30,60,120,240].includes(p.step))setStep(p.step);
     layoutChoice=!!p.stack;
@@ -926,14 +1014,15 @@ function applyProject(p){
 function applyPending(c){
   const p=c.pending;c.pending=null;
   const d=c.dur||Infinity;
-  c.in=Math.min(p.in,d);c.out=Math.min(p.out,d);c.imp=clamp(p.imp,c.in,c.out);c.impSet=p.impSet;
+  for(let i=0;i<NPTS;i++){c.pts[i]=Math.min(p.pts[i],d);c.set[i]=!!p.set[i]}
+  normalize(c);
   c.mismatch=!!(p.file&&c.file&&!c.sample&&c.file.size!==p.file.size);
   if(c.mismatch)c.expected=p.file.name;
   drawProjNote();
 }
 function drawProjNote(){
   const need=clips.filter(c=>c.pending&&c.pending.file).map(c=>`${nameOf(c)}「${c.pending.file.name}」`);
-  const bad=clips.filter(c=>c.mismatch).map(c=>`${nameOf(c)}の動画が保存時（${c.expected}）と違うようです。別の動画なら、開始とインパクトを確認してください。`);
+  const bad=clips.filter(c=>c.mismatch).map(c=>`${nameOf(c)}の動画が保存時（${c.expected}）と違うようです。別の動画なら、地点の位置を確認してください。`);
   const msg=[need.length?`動画を選ぶと編集内容が戻ります：${need.join('、')}`:'',...bad].filter(Boolean).join(' ');
   $('proj-note').textContent=msg;$('proj-note').hidden=!msg;
 }
@@ -978,6 +1067,7 @@ try{
   }
 }catch{}
 
+buildPointButtons();
 clips.forEach(c=>loadBlob(c,new Blob([b64(SAMPLE[c.id])],{type:'video/mp4'}),true));
 </script>
 
