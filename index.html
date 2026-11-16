@@ -85,7 +85,7 @@ input[type=range]{width:100%;margin:0;accent-color:var(--accent);display:block;h
 .pt-name-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
 .pt-name-list label{display:flex;align-items:center;gap:6px;font-weight:700;min-width:0}
 .pt-name-list input{flex:1;min-width:0;font:inherit;font-weight:500;font-size:.875rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
-body.cmp .pt-names{display:none}
+body.cmp .pt-names,body.cmp .pt-tools{display:none}
 .sync-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sync-row .seg button{min-width:40px}
 .readout .pts{display:flex;flex-wrap:wrap;justify-content:center;gap:0 8px}
@@ -167,10 +167,6 @@ body.cmp .screen{flex:1;height:auto;min-height:0;aspect-ratio:auto;max-height:no
     <button type="button" id="mode-cmp" aria-pressed="false">2 見比べる</button>
   </div>
   <label class="toggle">コマ送り <select class="step-size" id="step-edit" aria-label="コマ送りの細かさ"><option value="15">1/15秒</option><option value="30" selected>1/30秒</option><option value="60">1/60秒</option><option value="120">1/120秒</option><option value="240">1/240秒</option></select></label>
-  <div class="pt-tools">
-    <button type="button" class="cbtn" id="pt-add">地点を増やす</button>
-    <button type="button" class="cbtn" id="pt-del" hidden>地点を減らす</button>
-  </div>
   <div class="proj-btns">
     <button type="button" class="cbtn" id="proj-save">プロジェクト保存</button>
     <label class="cbtn proj-open"><input type="file" id="proj-file" accept=".json,application/json">プロジェクトを開く</label>
@@ -208,6 +204,10 @@ body.cmp .screen{flex:1;height:auto;min-height:0;aspect-ratio:auto;max-height:no
   </div>
 </div>
 
+<div class="pt-tools">
+  <button type="button" class="cbtn" id="pt-add">地点を増やす</button>
+  <button type="button" class="cbtn" id="pt-del" hidden>地点を減らす</button>
+</div>
 <div class="pt-names" id="pt-names" role="group" aria-label="地点の名前"><span class="toggle">地点の名前（任意）</span><div class="pt-name-list" id="pt-name-list"></div></div>
 <section class="transport" id="transport" aria-label="同時再生" hidden>
   <div>
